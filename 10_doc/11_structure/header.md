@@ -49,11 +49,13 @@ Foo: bar                         DATA
 
 </code>
 </pre>
+
 ## 기초
   * key:value 인덱싱 지원
   * key는 모두 소문자로 사용해야함
+
 ## Cookie
-> 만약 a=b; c=d 라는 쿠키가 있다고 하자.
+만약 a=b; c=d 라는 쿠키가 있다고 하자.
 * HTTP 1.1
   * cookie: a=b; c=d;
   * 이 경우에 값 하나만 바뀌면 다시 다 받아와야함
@@ -62,6 +64,7 @@ Foo: bar                         DATA
   * cookie: c=d
   * **나눠서** 보냄
   * 이 경우에 SESSION같은 쿠키는 잘 안바뀌기 때문에 빠름
+
 ##Virtual Header
 1. :satus
 2. :authority
