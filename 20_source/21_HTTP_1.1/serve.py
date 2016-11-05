@@ -15,7 +15,8 @@ def serve():
         conn.sendall("HTTP/1.1 200 OK\r\n"\
         "Server: python/3.5.2\r\n"\
         "Content-Type: text/html; charset=\"utf-8\"\r\n\r\n"\
-        "<html></html>".encode('utf-8'))
+        "<html><head><title>HTTP 1.1</title></head><body><h1>Hello HTTP 1.1</h1></body></html>"
+        .encode('utf-8'))
         conn.close()
 
 serve()
