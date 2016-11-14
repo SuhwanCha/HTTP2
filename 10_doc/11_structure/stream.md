@@ -1,8 +1,8 @@
 # RFC7540(HTTP2) Structure - Header
 
 ## 구조
-<code>
-<pre>
+```
+FROM RFC7540 offical
                          +--------+
                  send PP |        | recv PP
                 ,--------|  idle  |--------.
@@ -29,7 +29,7 @@
 |           | recv R     +--------+   recv R   |           |
 | send R /  `----------->|        |<---------->'  send R / |
 | recv R                 | closed |               recv R   |
-`----------------------->|        |<--------------------->'
+`----------------------->|        |<-----------------------'
                          +--------+
 
 send:   endpoint sends this frame
@@ -39,9 +39,7 @@ H:  HEADERS frame (with implied CONTINUATIONs)
 PP: PUSH_PROMISE frame (with implied CONTINUATIONs)
 ES: END_STREAM flag
 R:  RST_STREAM frame
-</code>
-</pre>
-
+```
 ## Stream Identifiers
 * 스트림들은 31비트의 정수형 문자
 * 홀수 => 클라이언트 보냄
