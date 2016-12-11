@@ -117,10 +117,24 @@ class http2():
                         print("[ERROR]Receive Data is Empty")
                         break
 
-                    mod = self.parse(data)
-                    if mod == 1:
-                        header = self.parse_header(data[14:])
-                    self.send_data(mod)
+
+                    switch {
+                        b'\x01' : type_1,    # HEADER
+                        b'\x02' : type_2,    # PRIORITY
+                        b'\x03' : type_3,    # RST_STREAM
+                        b'\x04' : type_4,    # setting
+                        b'\x05' : type_5,    # PUSH_PROMISE
+                        b'\x06' : type_6,    # PING
+                        b'\x07' : type_7,    # GOAWAY
+                        b'\x08' : type_8,    # WINDOW_UPDATE
+                        b'\x09' : type_9     # CONTINUATION
+                    }
+
+                    val = switch.get(data[3:4])
+
+
+                    if data == b'PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n':
+                        self.send_data(-1)
 
             except Exception as e:
                 print("[ERROR]Fail to accept connection", e)
@@ -132,18 +146,25 @@ class http2():
 
         return switch(data[3:4])
 
-    def switch(x):
-        return {
-            b'\x01' : 1,    # HEADER
-            b'\x02' : 2,    # PRIORITY
-            b'\x03' : 3,    # RST_STREAM
-            b'\x04' : 4,    # setting
-            b'\x05' : 5,    # PUSH_PROMISE
-            b'\x06' : 6,    # PING
-            b'\x07' : 7,    # GOAWAY
-            b'\x08' : 8,    # WINDOW_UPDATE
-            b'\x09' : 9     # CONTINUATION
-        }.get(x, 10) #default
+    def type_1(x):
+        return self.parse_header(x)
+
+    def type_2():
+        return
+
+    def type_3():
+
+    def type_4():
+
+    def type_5():
+
+    def type_6():
+
+    def type_7():
+
+    def type_8():
+
+    def type_9():
 
     # Parsed header save as dictionary type
     def parse_header(self,data):
@@ -153,6 +174,8 @@ class http2():
         dic_header = {}
         for str in decoded_headers:
             dic_header[str[0]] = str[1]
+
+        return dic_header
 
     # Send data
     def send_data(self,mod):
