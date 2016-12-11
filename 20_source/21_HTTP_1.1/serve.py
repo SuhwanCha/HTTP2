@@ -40,11 +40,11 @@ class run(Thread):
 
 
     def create_status_line(self,status_code):
-        return str("HTTP/1.1 " + str(status_code) +\
+        return str("HTTP/1.1 " + str(status_code) + \
             _status_code_to_msg[status_code] + '\r\n')
 
     def create_header(self):
-        return 'Server: python/3.5.2\r\n'\
+        return 'Server: python/3.5.2\r\n' \
                    'Content-Type: text/html; charset=\"utf-8\"\r\n\r\n'
 
     def create_data(self,file_name):
