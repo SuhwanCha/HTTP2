@@ -16,7 +16,7 @@ import socket
 import ssl
 import binascii
 import time
-from hpack.hpack import Encoder, Decoder
+from hpack import Encoder, Decoder
 
 SERVER_PREFACE = b'\x00\x00\x00\x04\x01\x00\x00\x00\x00'
 
@@ -25,7 +25,15 @@ PreSet = {
 'PORT' : 50000
 }
 
+# Encoder = Encoder()
+# Decoder = Decoder()
+
 develope = 1
+
+id = {
+    -1 : 'preface'
+
+}
 
 # Setting Class Start
 class setting:
@@ -110,64 +118,32 @@ class http2():
                         break
 
                     mod = self.parse(data)
+                    if mod == 1:
+                        header = self.parse_header(data[14:])
                     self.send_data(mod)
 
-
-
-            except:
-                print("[ERROR]Fail to accept connection")
+            except Exception as e:
+                print("[ERROR]Fail to accept connection", e)
 
     def parse(self,data):
         if data == b'PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n':
+            return -1
+
+        if data[3:4] == b'\x01':
+            print("header")
             return 1
 
+    def parse_header(self,data):
+        d = Decoder()
+        decoded_headers = d.decode(data)
+
+        # decoded = Decoder.decode(data)
+        print(decoded_headers)
+
     def send_data(self,mod):
-        if mod == 1:
-                self.conn.send(SERVER_PREFACE)
+        if mod == -1:
+            self.conn.send(SERVER_PREFACE)
 
-def server_start(socket):
-    while True:
-        try:
-            conn, addr = socket.accept()
-            try:
-                data = conn.recv(1024)
-            except Exception as e:
-                print(e)
-                print("Connection closed")
-                conn.close()
-                continue
-            print(binascii.hexlify(data))
-            print(data)
-            print(len(data))
-            print('='*50)
-            if len(data) == 0:
-                break
-            send_preface(conn)
-            print('='*50)
-            data = conn.recv(1024)
-            print(binascii.hexlify(data))
-            print(data)
-            print(len(data))
-            print('---------------')
-            conn.send(b'\x00\x00\x00\x04\x01\x00\x00\x00\x00')
-            data = conn.recv(1024)
-            print(binascii.hexlify(data))
-            print(data)
-            print(len(data))
-            print('---------------')
-
-            data = conn.recv(1024)
-            print(binascii.hexlify(data))
-            # print(data)
-            print(len(data))
-            print('---------------')
-        except KeyboardInterrupt:
-            conn.close()
-            print("ERROR!")
-            break
-
-def send_preface(socket):
-    print("asdasd")
 
 
 if __name__ == '__main__':
