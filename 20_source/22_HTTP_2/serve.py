@@ -130,9 +130,20 @@ class http2():
         if data == b'PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n':
             return -1
 
-        if data[3:4] == b'\x01':
-            print("header")
-            return 1
+        return switch(data[3:4])
+
+    def switch(x):
+        return {
+            b'\x01' : 1,    # HEADER
+            b'\x02' : 2,    # PRIORITY
+            b'\x03' : 3,    # RST_STREAM
+            b'\x04' : 4,    # setting
+            b'\x05' : 5,    # PUSH_PROMISE
+            b'\x06' : 6,    # PING
+            b'\x07' : 7,    # GOAWAY
+            b'\x08' : 8,    # WINDOW_UPDATE
+            b'\x09' : 9     # CONTINUATION
+        }.get(x, 10) #default
 
     # Parsed header save as dictionary type
     def parse_header(self,data):
