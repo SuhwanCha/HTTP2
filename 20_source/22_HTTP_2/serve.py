@@ -9,12 +9,18 @@ SERVER_PREFACE = b'\x00\x00\x00\x04\x01\x00\x00\x00\x00'
 
 def server_start(socket):
     print('Hi I\'m server')
-    socket.bind(('127.0.0.1', 50000))
+    socket.bind(('', 50000))
     socket.listen(5)
     while True:
         try:
             conn, addr = socket.accept()
-            data = conn.recv(1024)
+            try:
+                data = conn.recv(1024)
+            except Exception as e:
+                print(e)
+                print("Connection closed")
+                conn.close()
+                continue
             print(binascii.hexlify(data))
             print(data)
             print(len(data))
