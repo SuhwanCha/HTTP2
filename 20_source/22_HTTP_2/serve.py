@@ -1,10 +1,10 @@
 """
-██╗  ██╗████████╗████████╗██████╗ ██████╗     ███████╗███████╗██████╗  ██╗   ██╗███████╗██████╗
-██║  ██║╚══██╔══╝╚══██╔══╝██╔══██╗╚════██╗    ██╔════╝██╔════╝██╔══██╗██║   ██║██╔════╝██╔══██╗
-███████║   ██║         ██║    ██████╔╝ █████╔╝    ███████╗█████╗  ██████╔╝ ██║   ██║█████╗  ██████╔╝
-██╔══██║   ██║         ██║    ██╔═══╝  ██╔═══╝     ╚════██║██╔══╝  ██╔══██╗╚██╗ ██╔╝██╔══╝  ██╔══██╗
-██║   ██║   ██║         ██║    ██║       ███████╗    ███████║███████╗██║  ██║ ╚████╔╝ ███████╗██║  ██║
-╚═╝  ╚═╝    ╚═╝         ╚═╝    ╚═╝       ╚══════╝    ╚══════╝╚══════╝╚═╝  ╚═╝  ╚═══╝  ╚══════╝╚═╝  ╚═╝
+██╗  ██╗████████╗████████╗██████╗ ██████╗      ███████╗███████╗██████╗ ██╗    ██╗███████╗██████╗
+██║  ██║╚══██╔══╝╚══██╔══╝██╔══██╗╚════██╗     ██╔════╝██╔════╝██╔══██╗██║    ██║██╔════╝██╔══██╗
+███████║   ██║      ██║   ██████╔╝ █████╔╝     ███████╗█████╗  ██████╔╝ ██║   ██║█████╗  ██████╔╝
+██╔══██║   ██║      ██║   ██╔═══╝ ██╔═══╝      ╚════██║██╔══╝  ██╔══██╗ ╚██╗ ██╔╝██╔══╝  ██╔══██╗
+██║  ██║   ██║      ██║   ██║      ███████╗    ███████║███████╗██║  ██║  ╚████╔╝ ███████╗██║  ██║
+╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚═╝      ╚══════╝    ╚══════╝╚══════╝╚═╝  ╚═╝   ╚═══╝  ╚══════╝╚═╝  ╚═╝
 
 한국디지털미디어고등학교 2016학년도 창의IT 공모전 출품작
 14기 해킹방어과 박영훈, 차수환
@@ -12,10 +12,12 @@
 Copyright - MIT
 https://github.com/HTTP2Server/HTTP2/blob/master/LICENSE
 """
+
 import socket
 import ssl
 import binascii
 import time
+import asyncio
 from hpack import Encoder, Decoder
 
 SERVER_PREFACE = b'\x00\x00\x00\x04\x01\x00\x00\x00\x00'
@@ -94,7 +96,7 @@ class OpenSocket():
 # OpenSocekt End
 
 # class http2 start -> require Threading task(async.io)
-class http2():
+class http2(asyncio.Protocol):
     def __init__(self, socket):
         self.socket = socket
     def run(self):
@@ -116,55 +118,62 @@ class http2():
                     if len(data) == 0:
                         print("[ERROR]Receive Data is Empty")
                         break
+                    self.stream = data[6:9]
+                    mod = self.parse(data)
+                    if mod == 1:
+                        header = self.parse_header(data[14:])
+                        root = header[':path']
+                        datas, status = self.get_file(root)
+                        send_data = self.mkdata(datas)
+                    else : send_data = ''
 
-
-                    switch {
-                        b'\x01' : type_1,    # HEADER
-                        b'\x02' : type_2,    # PRIORITY
-                        b'\x03' : type_3,    # RST_STREAM
-                        b'\x04' : type_4,    # setting
-                        b'\x05' : type_5,    # PUSH_PROMISE
-                        b'\x06' : type_6,    # PING
-                        b'\x07' : type_7,    # GOAWAY
-                        b'\x08' : type_8,    # WINDOW_UPDATE
-                        b'\x09' : type_9     # CONTINUATION
-                    }
-
-                    val = switch.get(data[3:4])
-
-
-                    if data == b'PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n':
-                        self.send_data(-1)
+                    self.send_data(mod,send_data)
+                    if mod == 1:
+                        # data = self.conn.recv(1024)
+                        # print(data)
+                        data2 = self.send_datas(datas)
+                        print('datas', data2)
+                        self.conn.send(data2)
 
             except Exception as e:
                 print("[ERROR]Fail to accept connection", e)
+
+    def mkdata(self,data):
+        E = Encoder()
+        data_length = len(data)
+        header = {':content-length':data_length,':status':200}
+        header = E.encode(header)
+        length = len(header)
+        send_data = (length).to_bytes(3, byteorder='big')+b'\x01'+b'\x04'+b'\x00\x00\x00\x01'+header
+        return (send_data)
+
+    def send_datas(self,data):
+        data_length = len(data)
+        send_data = (data_length).to_bytes(3,byteorder='big')+b'\x00'+b'\x01'+b'\x00\x00\x00\x01'+str.encode(data)
+        return (send_data)
+
+    def get_file(self,file_name):
+        if file_name == '/' :
+            temp = 'index.html'
+        else :
+            temp = '.'+str(file_name)
+        try :
+            fp = open('htdocs/'+temp, 'r', encoding='utf-8')
+            status = 200
+        except FileNotFoundError:
+            status = 404
+        except PermissionError:
+            status = 403
+        return fp.read(), status
+
 
     # Parse binary typed response
     def parse(self,data):
         if data == b'PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n':
             return -1
 
-        return switch(data[3:4])
-
-    def type_1(x):
-        return self.parse_header(x)
-
-    def type_2():
-        return
-
-    def type_3():
-
-    def type_4():
-
-    def type_5():
-
-    def type_6():
-
-    def type_7():
-
-    def type_8():
-
-    def type_9():
+        if data[3:4] == b'\x01':
+            return 1
 
     # Parsed header save as dictionary type
     def parse_header(self,data):
@@ -174,14 +183,14 @@ class http2():
         dic_header = {}
         for str in decoded_headers:
             dic_header[str[0]] = str[1]
-
         return dic_header
 
     # Send data
-    def send_data(self,mod):
+    def send_data(self,mod, data=''):
         if mod == -1:
             self.conn.send(SERVER_PREFACE)
-
+        elif mod == 1:
+            self.conn.send(data)
 
 
 if __name__ == '__main__':
