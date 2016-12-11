@@ -125,6 +125,7 @@ class http2():
             except Exception as e:
                 print("[ERROR]Fail to accept connection", e)
 
+    # Parse binary typed response
     def parse(self,data):
         if data == b'PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n':
             return -1
@@ -133,13 +134,16 @@ class http2():
             print("header")
             return 1
 
+    # Parsed header save as dictionary type
     def parse_header(self,data):
         d = Decoder()
         decoded_headers = d.decode(data)
 
-        # decoded = Decoder.decode(data)
-        print(decoded_headers)
+        dic_header = {}
+        for str in decoded_headers:
+            dic_header[str[0]] = str[1]
 
+    # Send data
     def send_data(self,mod):
         if mod == -1:
             self.conn.send(SERVER_PREFACE)
