@@ -18,6 +18,7 @@ import ssl
 import binascii
 import time
 import asyncio
+import random
 from hpack import Encoder, Decoder
 
 SERVER_PREFACE = b'\x00\x00\x00\x04\x01\x00\x00\x00\x00'
@@ -27,10 +28,8 @@ PreSet = {
 'PORT' : 50000
 }
 
-# Encoder = Encoder()
-# Decoder = Decoder()
-
-develope = 1
+stream_id = 0
+develope = 0
 
 id = {
     -1 : 'preface'
@@ -107,7 +106,7 @@ class http2(asyncio.Protocol):
                     try:
                         data = self.conn.recv(1024)
                     except:
-                        print("[WARN]Fail to receive data")
+                        # print("[WARN]Fail to receive data")
                         self.conn.close()
                         break
                     if develope == 1:
@@ -116,7 +115,7 @@ class http2(asyncio.Protocol):
                         print('='*50)
 
                     if len(data) == 0:
-                        print("[ERROR]Receive Data is Empty")
+                        # print("[ERROR]Receive Data is Empty")
                         break
                     self.stream = data[6:9]
                     mod = self.parse(data)
@@ -125,18 +124,18 @@ class http2(asyncio.Protocol):
                         root = header[':path']
                         datas, status = self.get_file(root)
                         send_data = self.mkdata(datas)
+                        stream_id = data[5:9]
+                        print('stream_id is :  ',stream_id)
                     else : send_data = ''
 
                     self.send_data(mod,send_data)
                     if mod == 1:
-                        # data = self.conn.recv(1024)
-                        # print(data)
                         data2 = self.send_datas(datas)
-                        print('datas', data2)
                         self.conn.send(data2)
-
+                        print(stream_id)
             except Exception as e:
-                print("[ERROR]Fail to accept connection", e)
+                # print("[ERROR]Fail to accept connection", e)
+                self.conn.close()
 
     def mkdata(self,data):
         E = Encoder()
@@ -145,14 +144,15 @@ class http2(asyncio.Protocol):
         header = E.encode(header)
         length = len(header)
         send_data = (length).to_bytes(3, byteorder='big')+b'\x01'+b'\x04'+b'\x00\x00\x00\x01'+header
+        print(send_data)
         return (send_data)
-
     def send_datas(self,data):
         data_length = len(data)
         send_data = (data_length).to_bytes(3,byteorder='big')+b'\x00'+b'\x01'+b'\x00\x00\x00\x01'+str.encode(data)
         return (send_data)
 
     def get_file(self,file_name):
+        print(file_name)
         if file_name == '/' :
             temp = 'index.html'
         else :
@@ -164,6 +164,7 @@ class http2(asyncio.Protocol):
             status = 404
         except PermissionError:
             status = 403
+
         return fp.read(), status
 
 
