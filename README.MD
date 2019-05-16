@@ -41,8 +41,8 @@ R:  RST_STREAM frame
 ```
 
 ## About this project
-![HTTP](http://httpwg.org/asset/http.svg)
-![한국디지털미디어고등학교](http://dimigo.hs.kr/layouts/dimigo_v2/images/static.logo.png) 창의 IT 공모대회 출품 준비작
+![HTTP](http://httpwg.org/asset/http.svg)  
+![한국디지털미디어고등학교](http://dimigo.hs.kr/layouts/dimigo_v2/images/static.logo.png)  
 * License : [MIT](LICENSE)
 
 
